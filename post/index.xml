@@ -5,10 +5,54 @@
     <description>Recent content in Posts on My New Hugo Site</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 06 May 2020 14:10:11 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 11 May 2020 13:59:46 +0800</lastBuildDate>
     
         <atom:link href="http://windtalkler.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Base】 tar 命令</title>
+      <link>http://windtalkler.github.io/post/basetar-%E5%91%BD%E4%BB%A4/</link>
+      <pubDate>Mon, 11 May 2020 13:59:46 +0800</pubDate>
+      
+      <guid>http://windtalkler.github.io/post/basetar-%E5%91%BD%E4%BB%A4/</guid>
+      <description>前言 最近写了配置导入导出脚本，用到打包压缩，命令含含糊糊，索性再整理一波。
+打包，压缩  提供打包，或者压缩，或者打包压缩 功能
+ 两个概念
+*打包：*一大堆文件和目录变成一个文件；
+压缩： 将一个大文件通过压缩算法变成一个小文件。
+为什么有这两个概念： 源于Linux中很多压缩程序只能针对一个文件进行压缩，当你想要压缩一大堆文件时，其实要分两步走，
+​	1）先将这一大堆文件先打成一个包（tar命令）
+​	2）再用压缩程序进行压缩（gzip bzip2命令）
+语法
+tar [option] [FILE] ... option	: 基本选项，压缩选项，等等 参数	：指定要打包的文件或目录列表 # 基础够用 压　缩：tar -czv -f filename.tar.gz 要被压缩的文件或目录名称 查　询：tar -tzv -f filename.tar.gz 解压缩：tar -xzv -f filename.tar.gz -C 欲解压缩的目录 选项说明
+-cxt : 不能同时出现，分别是创建，解包(压),查看 -r	: 向tar包中追加文件 -f	: 立即接文档名 xx.tar 或 xx.tar.gz -v	: 详细信息，一般前台打印使用 -zjJZ	: 压缩选项--打包同时解压，分别对应 gzip | bzip2 | xz | compress 压缩格式 -C DIR : 默认释放到当前路径；指定释放地址，配合-xf使用 # 不常用 -u	: 更新文件 -p	: 保留源文件属性 tar -czvpf src.</description>
+    </item>
+    
+    <item>
+      <title>Netfilter简单梳理</title>
+      <link>http://windtalkler.github.io/post/netfilter%E7%AE%80%E5%8D%95%E6%A2%B3%E7%90%86/</link>
+      <pubDate>Sun, 10 May 2020 13:59:46 +0800</pubDate>
+      
+      <guid>http://windtalkler.github.io/post/netfilter%E7%AE%80%E5%8D%95%E6%A2%B3%E7%90%86/</guid>
+      <description>大纲  防火墙、netfilter、iptables 连接跟踪表 NAT 这三者的关系  名词解释 规则链： chain
+IP防火墙： IPFW ,早期的linux防火墙
+网络过滤器防火墙： netfilter
+四表五链： filter、nat、mangle、raw | PREROUTING、INPUT、OUTPUT、FORWARD、POSTROUTING
+两空间： 用户空间、内核空间
+三判断： 数据包在流经一台设备经过三次路由判断。
+三路径： 就是数据包流经设备的3个路径
+ 本机收包 本机发包 本机转发  数据包通过3个路径，穿过5条链，是按优先级分别匹配4张表的5条链 ==(如果有的话)==。
+iptables/netfilter  虽然使用service iptables start 启动iptables服务。但iptables并没有守护进程，并不能算真正意义上的服务，只能是内核提供的功能。
+ iptables是linux防火墙管理程序。进一步说，iptables是用于管理netfilter防火墙的用户程序。
+Netfilter是用来实现linux内核中防火墙的linux内核空间程序代码段。它要么被直接编译进内核，要么被包含在模块集中。
+防火墙在做数据包过滤决定时，有一套遵循和组成的规则，这些规则存储在专用的数据包过滤表中，而这些表集成在Linux内核中。在数据包过滤表中，规则被分组放在我们所谓的链（chain）中。对这些规则进行增删改查的工具就是iptables.
+netfilter是内核中的一个数据包处理模块，有以下功能：
+ NAT 数据包内容修改 数据包过滤（封包过滤、封包重定向）  3路3判4表5链 3路： 以下4表5链会用到3路径，这里简单说明：
+ 本机收：记为A，涉及到两条chain，prerouting，input，分别记为A1，A2； 本机发：记为B，涉及到两条chain，output，postrouting，分别记为B1，B2； 本机转发：记为C，涉及到3条chain，prerouting,forward,postrouting,记为C1,C2,C3  3判： 数据包在3条路径流向中会经历三次路由判断。
+ 在经过prerouting链之后，经过一次路由判断，产生PathA和PathC；&amp;mdash;&amp;ndash;1）判断是发给本地程序还是转发出去 在PathB中，本机产生的包首先经过一次路由判断，才会进入output链；&amp;ndash;2）判断源地址和出接口等信息 在PathBC最后，包走到postrouting之前，还要进行一次路由判断。&amp;mdash;&amp;mdash;3）经过DNAT之后（目的地址会变化）再做最后一次路由判断。  4表： 优先级由高到低&amp;ndash;数据包经过5个链时优先进入哪个表的该链
+ raw：优先级最高，设置raw一般是为了不再让iptables做数据包的连接跟踪处理，提高性能 mangle：用于对特定数据包的修改 nat：用于端口、地址映射 filter:一般过滤功能  raw优先级最高，就是为了不让iptables做数据包跟踪处理，所以要在收到数据包在连接跟踪之前进行处理，因此放在链条最开始，3条路径的最开始chain是prerouting和ouput。一旦使用了raw表，就会跳过之后的NAT表和nf_conntrack处理。也就不再做地址转化和数据包跟踪了。</description>
+    </item>
     
     <item>
       <title>First_post</title>
@@ -16,8 +60,20 @@
       <pubDate>Wed, 06 May 2020 14:10:11 +0800</pubDate>
       
       <guid>http://windtalkler.github.io/post/first_post/</guid>
-      <description>来个二级标题 这是第一个本地文章;
-push</description>
+      <description>前言 Hugo + GithubPages 搭建blog。第一次push。
+这是第一个本地文章;
+写点什么 ​	今年五一，赶上疫情，哪里也不能去，还是得宅在家里，石家庄已经好太多了，大家已经恢复了日常，虽然戴着口罩，影响已经很小了，毕竟生活还得继续。
+​	既然是个写东西的地方，不妨回忆下这些年的随笔往事：
+​
+​	最早是大学时候，2008年，那时候用QQ空间记录生活点点滴滴。可以上传图片，记录图文。悠哉美哉。后面的两年，智能终端，移动互联网兴起，我还是用手机QQ记录过空间内容，屏幕小，还是有些费时；
+​	四年之后，参加工作，鉴于工作环境的限制（不能上网）用excel记录工作日志。一些工作总结写word。靠U盘，硬盘转储。随笔渐渐少了，更多的是QQ说说，短短的一两句话，或是冲动，或是吐槽，总能带来很多“流量”
+​	慢慢的，移动互联网爆发~~我QQ渐渐长草，QQ空间也随之荒废了，断了日常记录。。。取而代之的是微信，是朋友圈了。。我记得首次登陆微信是2013年，南非。哈哈&amp;hellip;，配着异国风景，感觉很“拉风“。
+​	随后，各种手机APP井喷，用了几年印象笔记，记录日常，开销，随笔，分享，收藏，笔记等等。好处是可以打标签，分类。
+​	后来上有道云笔记，分类更细了。随后接触Markdown，一发不可收，md真是好用哈。正好有道笔记也支持Markdown，之后所有的笔记，总结都在有道上。其他的MD编辑器也不感兴趣了。
+​	再后来大概2017左右，经大师（同事啦，太牛逼不可描述故有此称）推荐，了解到简书，印象中就在上面写了个《2017中秋游记》。写了个《2018 江城子&amp;ndash;忆高考》。没有形成习惯。
+后记 ​	这一路下来，日常记录还是很少的，但每每回忆起来，这些随笔还是能把我带回那时那景。时间确实消磨了我的激情，现在很少有要写点什么的冲动了，即使遇到让我为之心动的瞬间，也竟然不愿去记录。无论是图片，还是文字。
+​	在有道上，平时还是记录的IT类总结很多，但归纳也是很凌乱，也跟我这浮躁的心有关吧。这次Markdown Blog算是个契机吧。归档一下文档，梳理下心思。慢下来，稳下来。
+​	三十而立，今天，我来这儿重拾待发。</description>
     </item>
     
   </channel>

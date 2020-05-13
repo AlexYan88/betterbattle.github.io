@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <title>My New Hugo Site-Netfilter简单梳理</title>
+    <meta name="keywords"
+        content=''>
+    <meta name="description" content="" />
+
+    
+    <meta name="baidu-site-verification" content="v9szEmQLra" />
+    <meta name="360-site-verification" content="d8e961f98fb655e4b8cf9439cfd9ac7f" />
+    <meta name="sogou_site_verification" content="40NC9EdZDC" />
+    <meta name="shenma-site-verification" content="3200e3042e92157713a3b0aceeecb20a_1586020187" />
+    <meta name="google-site-verification" content="r8987bkunZHJeKut3ocu5NIJ5QEu53NA6Q_r7RrZ46c" />
+    <meta name="msvalidate.01" content="893A2865ABC54AC2782D118536831056" />
+
+    
+    <link rel="shortcut icon" href="/img/res/favicon.ico">
+    
+
+    
+
+    <link crossorigin="anonymous" integrity="sha384-5kGFOAqgEKnuF6c2jk2JANKHZgYVt38Wn2dVJENtq1EBCP54/1uzXU5mpxqL8WjN"
+        href="https://lib.baomitu.com/bulma/0.8.0/css/bulma.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/dooz.blog.css" />
+    <script crossorigin="anonymous" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh"
+        src="https://lib.baomitu.com/jquery/3.4.1/jquery.min.js"></script>
+
+    
+    
+
+    
+
+    
+    
+<link rel="stylesheet" href="/css/reward.css">
+
+
+    <link href="/css/fonts.googleapi.css" rel="stylesheet">
+    <script src=/js/dooz.blog.js></script>
+
+    
+    <script>
+        $(document).ready(function () {
+            $('.content a[href^="http"]').each(function () {
+                $(this).attr('target', '_blank');
+            });
+        });
+
+        $(document).on('click', '.modal-wechat', function () {
+            $(".modal").addClass("is-active");
+        });
+
+        $(document).on('click', '.modal-background', function () {
+            $(".modal").removeClass("is-active");
+        });
+    </script>
+</head>
+
+<body>
+    
+    
+<section class="hero is-info is-medium"
+    style="background-image: url('/');">
+    <div class="hero-head">
+        <nav class="navbar is-transparent container has-text-white">
+    <div class="navbar-brand">
+        <div class="navbar-item">
+            <a class="title is-5 is-white" href="/">My New Hugo Site</a>
+        </div>
+
+        
+        <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div id="navbarExampleTransparentExample" class="navbar-menu has-text-dark">
+        
+
+        <div class="navbar-end">
+            <a class="navbar-item" href='/'>Home</a>
+            <a class="navbar-item" href='/archives'>Archives </a>
+            <a class="navbar-item" href='/about'>About</a>
+            <span class="navbar-item">
+                <a class="button is-primary is-inverted" href="https://github.com/hollson/hugo-theme-dooz">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Theme</span>
+                </a>
+            </span>
+        </div>
+    </div>
+</nav>
+    </div>
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <div class='container has-text-left column is-7'>
+                
+                <h1 class="title is-size-2" style="margin-bottom:0.2rem;">
+                    
+                    Netfilter简单梳理
+                    
+                </h1>
+                
+                <span class="title is-size-6" style="font-style: italic;"> </span><br>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+    
+    <div class="container">
+        <div class="section">
+            
+<div class="columns">
+    <div class="column is-9">
+        <div class="tile is-child box">
+            <div class="content">
+                
+                <nav class="level">
+                    
+                    <div class="level-left">
+                        <div class="level-item">
+                            <p class="subtitle is-size-6 has-text-grey-light" style="font-style: italic;">
+    
+    Published at Sunday, May 10, 2020 &middot;
+    
+    <i class="far fa-clock"></i>&nbsp; 6 min read
+</p>
+                        </div>
+                    </div>
+
+                    
+                    
+                </nav>
+                <hr>
+                
+                <header>
+                    <h2>Table of contents</h2>
+                </header>
+                <nav id="TableOfContents">
+  <ul>
+    <li><a href="#大纲">大纲</a></li>
+    <li><a href="#名词解释">名词解释</a></li>
+    <li><a href="#iptablesnetfilter">iptables/netfilter</a>
+      <ul>
+        <li><a href="#3路3判4表5链">3路3判4表5链</a></li>
+        <li><a href="#状态机">状态机</a></li>
+      </ul>
+    </li>
+    <li><a href="#连接跟踪表">连接跟踪表</a>
+      <ul>
+        <li><a href="#这个表的位置相关的参数">这个表的位置？相关的参数？</a></li>
+        <li><a href="#跟踪该记录表实战应用">跟踪该记录表实战应用</a></li>
+        <li><a href="#工作原理简述">工作原理简述</a></li>
+        <li><a href="#这个表的作用">这个表的作用</a></li>
+        <li><a href="#经典性能问题nf_conntracktable-fulldropping-packet">经典性能问题：nf_conntrack:table full,dropping packet.</a></li>
+      </ul>
+    </li>
+    <li><a href="#nat">NAT</a></li>
+    <li><a href="#防火墙和iptablesnetfilternf_conntracknat是什么关系">防火墙和iptables，netfilter,nf_conntrack，nat是什么关系？</a>
+      <ul>
+        <li><a href="#防火墙iptablesnetfilter简述区别">防火墙、iptables、netfilter简述区别</a></li>
+        <li><a href="#防火墙和连接跟踪表nat的关系">防火墙和连接跟踪表、NAT的关系</a></li>
+      </ul>
+    </li>
+    <li><a href="#注意">注意：</a></li>
+  </ul>
+</nav>
+                
+                <hr>
+                <h2 id="大纲">大纲</h2>
+<ol>
+<li>防火墙、netfilter、iptables</li>
+<li>连接跟踪表</li>
+<li>NAT</li>
+<li>这三者的关系</li>
+</ol>
+<h2 id="名词解释">名词解释</h2>
+<p><strong>规则链：</strong> chain<br>
+<strong>IP防火墙：</strong> IPFW  ,早期的linux防火墙<br>
+<strong>网络过滤器防火墙：</strong> netfilter<br>
+<strong>四表五链：</strong> filter、nat、mangle、raw  | PREROUTING、INPUT、OUTPUT、FORWARD、POSTROUTING<br>
+<strong>两空间：</strong> 用户空间、内核空间<br>
+<strong>三判断：</strong> 数据包在流经一台设备经过三次路由判断。<br>
+<strong>三路径：</strong> 就是数据包流经设备的3个路径</p>
+<ol>
+<li>本机收包</li>
+<li>本机发包</li>
+<li>本机转发</li>
+</ol>
+<p>数据包通过3个路径，穿过5条链，是按优先级分别匹配4张表的5条链 ==(如果有的话)==。</p>
+<h2 id="iptablesnetfilter">iptables/netfilter</h2>
+<blockquote>
+<p>虽然使用service iptables start 启动iptables服务。但iptables并没有守护进程，并不能算真正意义上的服务，只能是内核提供的功能。</p>
+</blockquote>
+<p>iptables是linux防火墙管理程序。进一步说，iptables是用于管理netfilter防火墙的用户程序。<br>
+Netfilter是用来实现linux内核中防火墙的<strong>linux内核空间程序代码段</strong>。它要么被直接编译进内核，要么被包含在模块集中。</p>
+<p>防火墙在做数据包过滤决定时，有一套遵循和组成的规则，这些<strong>规则存储在专用的数据包过滤表中</strong>，而这些表<strong>集成在Linux内核</strong>中。在数据包过滤表中，规则被分组放在我们所谓的链（chain）中。对这些规则进行增删改查的工具就是iptables.</p>
+<p>netfilter是内核中的一个数据包处理模块，有以下功能：</p>
+<ul>
+<li>NAT</li>
+<li>数据包内容修改</li>
+<li>数据包过滤（封包过滤、封包重定向）</li>
+</ul>
+<h3 id="3路3判4表5链">3路3判4表5链</h3>
+<p><strong>3路：</strong> 以下4表5链会用到3路径，这里简单说明：</p>
+<ul>
+<li>本机收：记为A，涉及到两条chain，prerouting，input，分别记为A1，A2；</li>
+<li>本机发：记为B，涉及到两条chain，output，postrouting，分别记为B1，B2；</li>
+<li>本机转发：记为C，涉及到3条chain，prerouting,forward,postrouting,记为C1,C2,C3</li>
+</ul>
+<p><strong>3判：</strong> 数据包在3条路径流向中会经历三次路由判断。</p>
+<ul>
+<li>在经过prerouting链之后，经过一次路由判断，产生PathA和PathC；&mdash;&ndash;1）判断是发给本地程序还是转发出去</li>
+<li>在PathB中，本机产生的包首先经过一次路由判断，才会进入output链；&ndash;2）判断源地址和出接口等信息</li>
+<li>在PathBC最后，包走到postrouting之前，还要进行一次路由判断。&mdash;&mdash;3）经过DNAT之后（目的地址会变化）再做最后一次路由判断。</li>
+</ul>
+<p><strong>4表：</strong> 优先级由高到低&ndash;数据包经过5个链时优先进入哪个表的该链</p>
+<ol>
+<li>raw：优先级最高，设置raw一般是为了不再让iptables做数据包的连接跟踪处理，提高性能</li>
+<li>mangle：用于对特定数据包的修改</li>
+<li>nat：用于端口、地址映射</li>
+<li>filter:一般过滤功能</li>
+</ol>
+<p>raw优先级最高，就是为了不让iptables做数据包跟踪处理，所以要在收到数据包在连接跟踪之前进行处理，因此放在链条最开始，3条路径的最开始chain是prerouting和ouput。一旦使用了raw表，就会跳过之后的NAT表和nf_conntrack处理。也就不再做地址转化和数据包跟踪了。</p>
+<blockquote>
+<p>RAW表可以应用在那些不需要做nat的情况下，以提高性能。如大量访问的web服务器，可以让80端口不再让iptables做数据包的链接跟踪处理，以提高用户的访问速度。</p>
+</blockquote>
+<p>命令中<code>-t raw</code> 会加载 <code>iptable_raw</code> 模块（kernel 2.6+ 都有）
+raw 表基本就干一件事，通过<code> -j NOTRACK</code> 给不需要被连接跟踪的包打<code>标记（UNTRACKED 状态）</code>，告诉 nf_conntrack 不要跟踪连接</p>
+<p><strong>5链：</strong></p>
+<ul>
+<li>Prerouting:  数据包进入路由表之前。(chain:A1,C1)&mdash;&mdash;&ndash;PathAC的起点</li>
+<li>INput：经过路由之后，目的地为本机的。（chain:A2）&mdash;-PathA的终点</li>
+<li>Forward：经过路由之后，目的地不为本机。（chain:C2）-PathC的中点</li>
+<li>Output：本机产生，向外发（chain：B1）&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;PathB的起点</li>
+<li>POSTrouting：发送到本机网卡接口之前（B2,C3）&mdash;&mdash;&mdash;PathBC的终点</li>
+</ul>
+<h4 id="3345的关系">3345的关系</h4>
+<ol>
+<li>raw表总出现在数据最开始，即A1，C1，B1位置；即chain：prerouting+output</li>
+<li>mangle表出现在所有chain中。</li>
+<li>nat表路径的开头和结尾。开头做DNAT，结尾做SNAT。chain：prerouting+input+output+postrouting</li>
+<li>filter表最普通包过滤。chain：input，output，forward。最常用在input。</li>
+</ol>
+<p><strong>特别说明：</strong> nat表在centos7中存在input,在centos6中不存在input链中。</p>
+<h4 id="3路的补充">3路的补充</h4>
+<p><strong>数据包流程：</strong> 当数据包到达防火墙时，如果MAC地址符合，就会有内核里的驱动程序接收，经过一系列操作，从而决定是本地收还是转发出去。<br>
+<strong>接口收到包：</strong> 包括PathA和PathC。</p>
+<table>
+<thead>
+<tr>
+<th>step</th>
+<th>Table</th>
+<th>Chain</th>
+<th>comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td></td>
+<td></td>
+<td>在线路传输（eg，Internet）</td>
+</tr>
+<tr>
+<td>2</td>
+<td></td>
+<td></td>
+<td>进入接口（eg,eth0）</td>
+</tr>
+<tr>
+<td>3</td>
+<td>raw</td>
+<td>PREROUTING</td>
+<td>如果配置，则不进行conntrack，不进行nat</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td>==如果进行链接跟踪，则开始记录跟踪了。==</td>
+</tr>
+<tr>
+<td>4</td>
+<td>mangle</td>
+<td>PREROUTING</td>
+<td>这个链用来mangle数据包，比如改变TOS等</td>
+</tr>
+<tr>
+<td>5</td>
+<td>nat</td>
+<td>PREROUTING</td>
+<td>DNAT，不做过滤操作(如果配了raw，则该表失效)</td>
+</tr>
+<tr>
+<td>6</td>
+<td></td>
+<td></td>
+<td><strong>路由判断</strong>&mdash;-转发（PathC）还是本地（PathA）</td>
+</tr>
+<tr>
+<td><strong>接下根据路由判断来分路：</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>&lt;==PathA==&gt;</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>step</th>
+<th>Table</th>
+<th>Chain</th>
+<th>comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td>mangle</td>
+<td>INPUT</td>
+<td>mangle数据包</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>filter</td>
+<td>INPUT</td>
+<td>所有以本地为目的的包都要经过这个链，不管它们从哪儿来。在此过滤</td>
+</tr>
+<tr>
+<td>A3</td>
+<td></td>
+<td></td>
+<td>到达本地程序。（eg，服务程序or客户程序）</td>
+</tr>
+</tbody>
+</table>
+<p>&lt;==PathC==&gt;</p>
+<table>
+<thead>
+<tr>
+<th>step</th>
+<th>Table</th>
+<th>Chain</th>
+<th>comment</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>mangle</td>
+<td>FORWARD</td>
+<td>这次mangle发生在最初的路由判断之后，在最后一次更改包的目的之前</td>
+<td>（译者注：就是下面的FORWARD链所做的，因其过滤功能，可能会改变一些包的目的地，如丢弃包）。</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>filter</td>
+<td>FORWARD</td>
+<td>对转发包进行最基本的过滤，转发是双方向的。</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>本地产生包外发：</strong>  ==PathB==</p>
+<table>
+<thead>
+<tr>
+<th>step</th>
+<th>Table</th>
+<th>Chain</th>
+<th>comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td></td>
+<td></td>
+<td>本地程序产生包</td>
+</tr>
+<tr>
+<td>B2</td>
+<td></td>
+<td></td>
+<td><strong>路由判断</strong> &mdash;-源地址，出接口等信息</td>
+</tr>
+<tr>
+<td>B3</td>
+<td>raw</td>
+<td>OUTPUT</td>
+<td>如果配置，则不进行conntrack，不进行nat</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td>==如果进行链接跟踪，则开始进行跟踪了==</td>
+</tr>
+<tr>
+<td>B4</td>
+<td>mangle</td>
+<td>OUTPUT</td>
+<td></td>
+</tr>
+<tr>
+<td>B5</td>
+<td>nat</td>
+<td>OUTPUT</td>
+<td>DNAT（若配了raw，则该表失效）</td>
+</tr>
+<tr>
+<td>B6</td>
+<td>filter</td>
+<td>OUTPUT</td>
+<td>本地发出的包进行基本过滤</td>
+</tr>
+</tbody>
+</table>
+<p><strong>PathBC结尾会和：</strong></p>
+<table>
+<thead>
+<tr>
+<th>step</th>
+<th>Table</th>
+<th>Chain</th>
+<th>comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C3B7</td>
+<td></td>
+<td></td>
+<td><strong>路由判断</strong>&mdash;这是在包离开设备之前，判断目的地址，主要是经过DNAT之后目的地址会改变。</td>
+</tr>
+<tr>
+<td>C4B8</td>
+<td>mangle</td>
+<td>POSTROUTING</td>
+<td>这一步mangle是在所有更改包的目的地址的操作完成之后做的，但这时包还在本地上。</td>
+</tr>
+<tr>
+<td>C5B9</td>
+<td>nat</td>
+<td>POSTROUTING</td>
+<td>SNAT，不做过滤操作。（若配了raw，则该表失效）</td>
+</tr>
+<tr>
+<td>C6B10</td>
+<td></td>
+<td></td>
+<td>离开接口（eg，eth0）</td>
+</tr>
+<tr>
+<td>C7B11</td>
+<td></td>
+<td></td>
+<td>在线路上传输</td>
+</tr>
+</tbody>
+</table>
+<h4 id="4表5链的补充">4表5链的补充</h4>
+<ol>
+<li>每一个内建的规则链都有自己的默认策略。</li>
+<li>每一条规则不仅能应用于单个规则链，也能应用于特殊的网络接口、消息协议类型（如TCP、UDP、ICMP)、服务端口、ICMP消息类型号。</li>
+<li>INPUT、OUTPUT、FORWARD规则链都定义了各自的接受、否定、拒绝规则。</li>
+</ol>
+<h3 id="状态机">状态机</h3>
+<p>状态机制，也就是连接跟踪。iptables是有状态机制的防火墙，通过conntrack模块跟踪记录每个连接的状态，通过它可制定严密的防火墙规则。这就把<strong>防火墙</strong>和<strong>连接跟踪</strong>关联起来了。</p>
+<ul>
+<li>状态</li>
+</ul>
+<pre><code>NEW        :新连接的数据包
+ESTABLISHED:已连接的数据包
+RELATED    :在已连接的链路，发起新的连接
+INVALID    :无效数据包
+</code></pre><h2 id="连接跟踪表">连接跟踪表</h2>
+<blockquote>
+<p>linux的连接跟踪表
+nf_conntrack 模块在 kernel 2.6.15（2006-01-03 发布） 被引入，支持 IPv4 和 IPv6，取代只支持 IPv4 的 ip_connktrack，用于跟踪连接的状态，供其他模块使用。</p>
+</blockquote>
+<h3 id="这个表的位置相关的参数">这个表的位置？相关的参数？</h3>
+<pre><code>/proc/net/ip_conntrack
+/prco/net/nf_conntrack     //前提是开了iptables服务
+
+/proc/$PID/net/nf_conntrack
+
+# 针对每一个进程：
+proc/$PID/task/$PID/net/nf_conntrack
+proc/$PID/task/$PID/net/stat/nf_conntrack
+proc/$PID/net/nf_conntrack
+proc/$PID/net/stat/nf_conntrack
+</code></pre><p><strong>重要概念：</strong>
+哈希表、桶</p>
+<ul>
+<li>net.nf_conntrack_max ： 允许的最大跟踪连接条目。</li>
+<li>net.netfilter.nf_conntrack_buckets ： 桶大小</li>
+<li>HASHSize ： 存储跟踪连接条目列表的哈希表大小。</li>
+</ul>
+<p>conntrack_max:是在内核内存中，netfilter可以同时处理的任务（连接跟踪条目）<br>
+/proc/sys/net/ipv4/ip_conntrack_max<br>
+/proc/sys/net/ipv4/netfilter/ip_conntrack_max</p>
+<p><strong>这个表的内容：</strong></p>
+<pre><code>root@Outside ~ # cat /proc/net/nf_conntrack
+ipv4 2 tcp  6  431454 ESTABLISHED src=127.0.0.1      dst=127.0.0.1 sport=29186 dport=3306 src=127.0.0.1 dst=127.0.0.1 sport=3306 dport=29186 [ASSURED] mark=0 use=2
+ipv4 2 tcp  6  300    ESTABLISHED src=172.24.130.101 dst=172.24.141.92 sport=60670 dport=22 src=172.24.141.92 dst=172.24.130.101 sport=22 dport=60670 [ASSURED] mark=0 use=2
+ipv4 2 tcp  6  431734 ESTABLISHED src=127.0.0.1      dst=127.0.0.1 sport=29185 dport=3306 src=127.0.0.1 dst=127.0.0.1 sport=3306 dport=29185 [ASSURED] mark=0 use=2
+ipv4 2 tcp  6  431953 ESTABLISHED src=172.24.131.16  dst=172.24.141.92 sport=64698 dport=22 src=172.24.141.92 dst=172.24.131.16 sport=22 dport=64698 [ASSURED] mark=0 use=2
+
+ipv4 2 udp  17 14     src=6.66.1.1       dst=255.255.255.255 sport=9027 dport=69 [UNREPLIED] src=255.255.255.255 dst=6.66.1.1 sport=69 dport=9027 mark=0 use=2
+ipv4 2 udp  17 3      src=6.66.1.1       dst=255.255.255.255 sport=9026 dport=69 [UNREPLIED] src=255.255.255.255 dst=6.66.1.1 sport=69 dport=9026 mark=0 use=2
+ipv4 2 udp  17 29     src=172.24.137.86  dst=172.24.143.255 sport=137 dport=137 [UNREPLIED] src=172.24.143.255 dst=172.24.137.86 sport=137 dport=137 mark=0 use=2
+ipv4 2 udp  17 28     src=172.24.137.86  dst=172.24.143.255 sport=138 dport=138 [UNREPLIED] src=172.24.143.255 dst=172.24.137.86 sport=138 dport=138 mark=0 use=2
+
+ipv4 2 icmp 1 27 src=172.24.141.92 dst=172.24.137.134 type=8 code=0 id=9070 src=172.24.137.134 dst=172.24.141.92 type=0 code=0 id=9070 mark=0 use=2
+ipv4 2 icmp 1 29 src=172.24.141.92 dst=172.24.137.134 type=8 code=0 id=9070 src=172.24.137.134 dst=172.24.141.92 type=0 code=0 id=9070 mark=0 secmark=0 use=2
+</code></pre><p>可以看到这张表结构：基于L3、L4协议区分：<br>
+<strong>结构：</strong>  <a href="https://stackoverflow.com/questions/16034698/details-of-proc-net-ip-conntrack-nf-conntrack">link</a></p>
+<pre><code>公共格式：
+ipv4 2  --L3协议名，编号
+tcp  6  --L4协议名，编号。UDP（17）、TCP（6）、ICMP（1）等
+timeout     --记录失效前剩余秒数：对应该条连接在表里的当前状态的timeout。
+连接状态    -- 当前连接的状态标识。只有TCP有。
+
+//之后都是key=value 或 flag格式，1行里最多2个同名key(如src)，第一次出现的来自请求，第2次出现的来自响应
+key：
+src=xxx dst=xxx sport=xx dport=xx src=xxx dst=xxx sport=xxx dport=xxx --双方向的4元组
+mark=0 secmark=0 use=2 secctx=system_u:object_r:unlabeled_t:s0 zone=0
+
+flag：
+[ASSURED] --请求和响应都有流量
+[UNREPLIED]  --没收到响应，哈希表满的时候这些连接先扔掉
+</code></pre><pre><code>//协议特有格式
+Please note that some column names appear only for specific protocols 
+(eg. sport and dport for TCP and UDP, type and code for ICMP).
+Other column names (eg. mark) appear only if the kernel was built with specific options.
+</code></pre><p>timeout 时间是该表中记录的清除时间，具体参数配置在内核中<code>sysctl -a | grep conntrack | grep timeout</code></p>
+<p>==注意：==</p>
+<ol>
+<li>记录里的状态只是个标识，<strong>跟连接本身</strong>的状态不一定是一一映射的关系，也就是跟协议标准和实现更没任何关系。</li>
+<li>The response destination host is not necessarily the same as the request source host, as the request source address may have been masqueraded by the response destination host.</li>
+</ol>
+<h3 id="跟踪该记录表实战应用">跟踪该记录表实战应用</h3>
+<blockquote>
+<p>Ubuntu 通常没有 /proc/net/nf_conntrack 文件，用 conntrack 命令代替，输出一样。命令：conntrack -L -o extended</p>
+</blockquote>
+<pre><code>## 记录查看
+sudo conntrack -L -o extended | tail -n 50
+# CentOS：
+sudo tail -n 50 /proc/net/nf_conntrack
+
+## 四层协议类型和连接数：
+awk '{sum[$3]++} END {for(i in sum) print i, sum[i]}'
+
+## TCP 连接各状态对应的条数：
+awk '/^.*tcp.*$/ {sum[$6]++} END {for(i in sum) print i, sum[i]}'
+
+## 三层协议类型和连接数：
+awk '{sum[$1]++} END {for(i in sum) print i, sum[i]}'
+
+## 连接数最多的 10 个 IP 地址：
+awk '{print $7}' | cut -d &quot;=&quot; -f 2 | sort | uniq -c | sort -nr | head -n 10
+</code></pre><h3 id="工作原理简述">工作原理简述</h3>
+<p>那么Netfilter又是如何生成连接记录项的呢？每一个数据，都有“来源”与“目的”主机，发起连接的主机称为“来源”，响应“来源”的请求的主机即为目的，所谓生成记录项，就是对每一个这样的连接的产生、传输及终止进行跟踪记录。由所有记录项产生的表，即称为连接跟踪表。</p>
+<p>nf_conntrack 跟踪所有网络连接，记录存储在1个哈希表里。首先根据五元组算出哈希值，分配一个桶，如果有冲突就在链表上遍历，直到找到一个精确匹配的。如果没有匹配的则新建。</p>
+<p>即使来自客户端的访问量不多，内部请求多的话照样会塞满哈希表，例如 ping 本机也会留下这么一条记录：</p>
+<pre><code>ipv4     2 icmp     1 29 src=127.0.0.1 dst=127.0.0.1 type=8 code=0 id=26067 src=127.0.0.1 dst=127.0.0.1 type=0 code=0 id=26067 mark=0 use=1
+</code></pre><p>连接记录会在哈希表里保留一段时间，根据协议和状态有所不同，直到超时都没有收发包就会清除记录。如果服务器比较繁忙，新连接进来的速度远高于释放的速度，把哈希表塞满了，新连接的数据包就会被丢掉。此时 netfilter 变成了一个黑洞， 这发生在3层（网络层），应用程序毫无办法。</p>
+<p>如果有人 DDoS 攻击的话情况更糟，无论是空连接攻击还是简单地用短连接发大量请求都能轻易塞满哈希表。或者更隐蔽点，研究了计算 conntrack hash 值的算法后，构造很多 hash 一致的不同五元组的数据包，让大量记录堆在同一个桶(bucket)里，使得遍历超长的冲突链表的开销大得难以接受。在当前的内核 conntrack 模块实现中，这是无法避免的（除非关掉不用），因为所有鸡蛋都在一个篮子里面。</p>
+<h3 id="这个表的作用">这个表的作用</h3>
+<p>conntrack:连接跟踪，就是跟踪并且记录连接状态。Linux为每一个经过网络堆栈的数据包，生成一个新的连接记录项(connection entry)。此后，所有属于此连接的数据包都被唯一地分配给这个连接，并标识连接的状态。<br>
+连接跟踪是防火墙模块的状态检测的基础，同时也是地址转换中实 现SNAT和DNAT的前提。</p>
+<h3 id="经典性能问题nf_conntracktable-fulldropping-packet">经典性能问题：nf_conntrack:table full,dropping packet.</h3>
+<p>netfilter/conntrack 相关内核参数往往是用Linux服务器的互联网小公司业务量上去之后遇到的第 3 个“新手怪”。</p>
+<ul>
+<li>第1个：进程可用的 FD 不足，</li>
+<li>第 2 位：IP 临时端口不足 + TIME_WAIT 状态的连接过多导致无法建立新连接）</li>
+</ul>
+<p>很多人以为 Linux 经过这么多年优化，默认参数应该“足够好”，其实不是。==默认参数面向“通用”服务器==，不适用于连接数和访问量比较多的场景。</p>
+<h4 id="症状">症状</h4>
+<p>在启用了iptables web服务器上，流量高的时候经常查看服务器负载正常，但请求大量超时，服务器／应用访问日志看不到相关请求记录。
+在 dmesg 或 /var/log/messages 看到大量以下记录：
+<code>kernel: nf_conntrack: table full, dropping packet.</code></p>
+<h4 id="原因">原因</h4>
+<p>由于web服务器收到了大量的连接，在启用了iptables的情况下，iptables会把所有的连接都做链接跟踪处理，所有连接跟踪记录全部存放在链接跟踪表中，当这个表满的时候，就会出现上面的错误。<br>
+<strong>其实就是：</strong> 服务器访问量大，内核 netfilter 模块 conntrack 相关参数配置不合理，导致 IP 包被丢掉，连接无法建立。</p>
+<p><a href="https://www.cnblogs.com/higkoo/articles/iptables_tunning_for_conntrack.html">https://www.cnblogs.com/higkoo/articles/iptables_tunning_for_conntrack.html</a></p>
+<h4 id="解决办法">解决办法：</h4>
+<h5 id="1-关闭防火墙一劳永逸必要时禁用模块">1. 关闭防火墙。一劳永逸。必要时禁用模块</h5>
+<ul>
+<li>对不直接暴露在公网，也不使用 NAT 转发的服务器来说，关闭 Linux 防火墙是最简单的办法，还避免了防火墙/netfilter 成为网络瓶颈。</li>
+<li>使用公有云的话可以用厂商提供的安全服务，通常是独立于你租的云服务器的，不消耗资源，比自己用系统防火墙设一大堆规则好得多。</li>
+</ul>
+<p>关了防火墙之后，如果 conntrack 相关参数还没消失，看看模块是不是还在，
+再删除连接跟踪模块。<br>
+<strong>查看：</strong></p>
+<pre><code>lsmod | egrep &quot;Module|ip_table|iptable|ip6|ipt|nat|conntrack&quot;
+# 有可能会匹配到不相关的，最好对照一下这里
+find /lib/modules/$(uname -r) -type f -name '*.ko*' | grep netfilter
+# 查看模块详细信息
+modinfo &lt;module&gt;
+</code></pre><p><strong>禁用模块：</strong></p>
+<pre><code>sudo modprobe [-f] -r &lt;module&gt; [&lt;module2&gt; ...]
+# 或：
+sudo rmmod [-f] &lt;module&gt;
+# 未使用（Used by 栏为 0）的模块才能禁用。
+# 如果 Used by 不为 0，先禁用后面列出的模块。
+# 如果后面没模块名，就是被进程使用。
+# 没有简单的方法能查到调用这些模块的都是什么进程，基本靠猜。
+# 查看启动信息，看有没有有用的线索（多半没有）
+dmesg | egrep &quot;ip_table|netfilter|conn&quot;
+</code></pre><p>一下是另一种禁用模块的方案：<br>
+1)禁用nf_conntrack和相关的依赖模块，示例：</p>
+<pre><code>rmmod nf_conntrack_ipv4
+rmmod nf_conntrack_ipv6
+rmmod xt_state
+rmmod xt_CT
+rmmod xt_conntrack
+rmmod iptable_nat
+rmmod ipt_REDIRECT
+rmmod nf_nat
+rmmod nf_conntrack
+</code></pre><p>2)禁用跟踪模块，把它加到黑名单（/etc/modprobe.d/blacklist.conf ）：</p>
+<pre><code># 禁用 nf_conntrack 模块
+blacklist nf_conntrack
+blacklist nf_conntrack_ipv6
+blacklist xt_conntrack
+blacklist nf_conntrack_ftp
+blacklist xt_state
+blacklist iptable_nat
+blacklist ipt_REDIRECT
+blacklist nf_nat
+blacklist nf_conntrack_ipv4
+</code></pre><p>3)去掉防火墙里所有和状态相关的配置（比如state状态，NAT功能），示例：</p>
+<pre><code>    *filter
+    # 允许ping
+    -A INPUT -p icmp -j ACCEPT
+    # 对本地回路和第2张网卡放行
+    -A INPUT -i lo -j ACCEPT
+    -A INPUT -i eth1 -j ACCEPT
+    # 对端口放行
+    -A INPUT -p tcp --dport 1331 -j ACCEPT
+    # 对IP放行
+    -A INPUT -s 192.168.10.31 -j ACCEPT
+
+    #允许本机进行DNS查询
+
+    -A INPUT -p udp --sport 53 -j ACCEPT
+    -A OUTPUT -p udp -j ACCEPT
+    -A INPUT -j REJECT --reject-with icmp-host-prohibited
+    -A FORWARD -j REJECT --reject-with icmp-host-prohibited
+    COMMIT
+</code></pre><p>另外，防火墙的配置文件最好也改下，不要加载任何额外模块（/etc/sysconfig/iptables-config）：</p>
+<pre><code>IPTABLES_MODULES=&quot;&quot; # 不需要任何附加模块
+IPTABLES_MODULES_UNLOAD=&quot;no&quot; # 避免iptables重启后sysctl中对应的参数被重置为系统默认值
+IPTABLES_SAVE_ON_STOP=&quot;no&quot;
+IPTABLES_SAVE_ON_RESTART=&quot;no&quot;
+IPTABLES_SAVE_COUNTER=&quot;no&quot;
+IPTABLES_STATUS_NUMERIC=&quot;yes&quot;
+IPTABLES_STATUS_VERBOSE=&quot;no&quot;
+IPTABLES_STATUS_LINENUMBERS=&quot;no&quot;
+</code></pre><h5 id="2-调整内核参数主要是扩容和快释放">2. 调整内核参数，主要是扩容和快释放</h5>
+<blockquote>
+<p>如果调用 netfilter 的进程不能关，或查不出什么进程在用，就要靠调整参数来尽量推迟出问题的时间。</p>
+</blockquote>
+<ul>
+<li>哈希表扩容：加大<code>nf_conntrack_max， nf_conntrack_buckets</code></li>
+<li>超时参数：降低ip_conntrack timeout</li>
+</ul>
+<p><strong>例子：</strong></p>
+<pre><code>vi /etc/sysctl.conf
+## 加大ip_conntrack_max
+net.netfilter.nf_conntrack_max=1048576
+## 降低ip_conntrack timeout
+net.netfilter.nf_conntrack_icmp_timeout=10
+net.netfilter.nf_conntrack_tcp_timeout_syn_recv=5
+net.netfilter.nf_conntrack_tcp_timeout_syn_sent=5
+net.netfilter.nf_conntrack_tcp_timeout_established=600
+net.netfilter.nf_conntrack_tcp_timeout_fin_wait=10
+net.netfilter.nf_conntrack_tcp_timeout_time_wait=10
+net.netfilter.nf_conntrack_tcp_timeout_close_wait=10
+net.netfilter.nf_conntrack_tcp_timeout_last_ack=10
+</code></pre><p><strong>哈希表扩容的影响：</strong> 内存使用增加，32位系统还要关心内核态的地址空间够不够。<br>
+netfilter 的哈希表存储在内核态的内存空间，这部分内存不能 swap，操作系统为了兼容 32 位，默认值往往比较保守。</p>
+<ul>
+<li>32 位系统的虚拟地址空间最多 4G，其中内核态最多 1G，通常能用的只有前 896M。</li>
+<li>给 netfilter 分配太多地址空间可能会导致其他内核进程不够分配。1 条跟踪记录 300 字节左右，因此当年 nf_conntrack_max 默认 65535 条，占 20多MB。</li>
+<li>64 位系统的虚拟地址空间有 256TB，内核态能用一半，只需要关心物理内存的使用情况。</li>
+</ul>
+<p><a href="https://testerhome.com/topics/15824">哈希表占用内存怎么算？</a>(<a href="https://wiki.khnet.info/index.php/Conntrack_tuning">https://wiki.khnet.info/index.php/Conntrack_tuning</a>)</p>
+<p><strong>那么多timeout，怎么调整？</strong> 比较复杂。直接看原链接吧</p>
+<h5 id="3-设置不连接跟踪的规则减少要跟踪的链接数只要修改raw表即可可以通过iptables命令下发也可直接修改etcsysconfigiptables配置文件">3. 设置不连接跟踪的规则，减少要跟踪的链接数。只要修改raw表即可。可以通过iptables命令下发，也可直接修改<code>/etc/sysconfig/iptables</code>配置文件。</h5>
+<p><strong>针对性的关闭连接：</strong> 针对那些连接量大的</p>
+<pre><code>##如一台web服务器可以这样：
+iptables -t raw -A PREROUTING -d 1.2.3.4 -p tcp --dport 80 -j NOTRACK
+iptables -A FORWARD -m state --state UNTRACKED -j ACCEPT
+</code></pre><p>或者修改:</p>
+<pre><code>/etc/sysconfig/iptables
+*raw
+# 对TCP连接不启用追踪，解决ip_contrack满导致无法连接的问题
+-A PREROUTING -p tcp -m tcp --dport 80 -j NOTRACK
+-A PREROUTING -p tcp -m tcp --dport 22 -j NOTRACK
+-A PREROUTING -p tcp -m tcp --dport 21 -j NOTRACK
+-A PREROUTING -p tcp -m tcp --dport 11211 -j NOTRACK
+-A PREROUTING -p tcp -m tcp --dport 60000:60100 -j NOTRACK
+-A PREROUTING -p tcp -s 192.168.10.1 -j NOTRACK
+-A OUTPUT -p tcp -m tcp --sport 80 -j NOTRACK
+-A OUTPUT -p tcp -m tcp --sport 22 -j NOTRACK
+-A OUTPUT -p tcp -m tcp --sport 21 -j NOTRACK
+-A OUTPUT -p tcp -m tcp --sport 11211 -j NOTRACK
+-A OUTPUT -p tcp -m tcp --sport 60000:60100 -j NOTRACK
+-A OUTPUT -p tcp -s 192.168.10.1 -j NOTRACK
+COMMIT 
+</code></pre><p>或者如下修改：</p>
+<pre><code>//这个必须插在第1条，凡是不跟踪的肯定是你想放行的：
+sudo iptables -I INPUT 1 -m state --state UNTRACKED -j ACCEPT
+# 设置成不跟踪的连接无法拿到状态，包含状态（-m state --state）的规则统统失效。
+# iptables 处理规则的顺序是从上到下，如果这条加的位置不对，可能导致请求无法通过防火墙。
+//不跟踪本地连接：
+sudo iptables -t raw -A PREROUTING -i lo -j NOTRACK
+sudo iptables -t raw -A OUTPUT -o lo -j NOTRACK
+# 假如 Nginx 和应用部署在同一台机子上，增加这规则的收益极为明显。
+# Nginx 连各种 upstream 使得连接数起码翻了倍，不跟踪本地连接一下干掉一大半。
+//不跟踪某些端口的连接：
+sudo iptables -t raw -A PREROUTING -p tcp -m multiport --dports 80,443 -j NOTRACK
+sudo iptables -t raw -A OUTPUT -p tcp -m multiport --sports 80,443 -j NOTRACK
+</code></pre><p><strong>对所有连接均关闭跟踪：</strong> 简单粗暴无差别全关闭</p>
+<pre><code>##/etc/sysconfig/iptables
+
+*raw
+# 对TCP/UDP连接不启用追踪，解决nf_contrack满导致无法连接的问题
+-A PREROUTING -p tcp -j NOTRACK
+-A PREROUTING -p udp -j NOTRACK
+-A OUTPUT -p tcp -j NOTRACK
+-A OUTPUT -p udp -j NOTRACK
+COMMIT
+</code></pre><h2 id="nat">NAT</h2>
+<p>根据转发规则修改 IP 包的源/目标地址，靠 conntrack 记录才能让返回的包能路由到发请求的机器。</p>
+<h2 id="防火墙和iptablesnetfilternf_conntracknat是什么关系">防火墙和iptables，netfilter,nf_conntrack，nat是什么关系？</h2>
+<h3 id="防火墙iptablesnetfilter简述区别">防火墙、iptables、netfilter简述区别</h3>
+<ul>
+<li>防火墙就是linux主机上一套包过滤系统。</li>
+<li>这套系统使用iptables作为工具，用来增删改查包过滤规则。</li>
+<li>netfilter这个框架在内核中具体完成包过滤功能，包括4表5链。这些表就是所谓的包过滤表，规则被分组放在链（chain）中</li>
+</ul>
+<p>总的来说这套防火墙（包过滤）系统实际上由两个组件<strong>netfilter</strong>和<strong>iptables</strong>组成：</p>
+<ol>
+<li>netfilter 组件属于内核空间（kernelspace），是内核的一部分，由一些信息包过滤表组成，这些表包含内核用来控制信息包过滤处理的规则集。</li>
+<li>iptables 组件是一种工具属于用户空间（userspace），它使插入、修改和除去信息包过滤表中的规则变得容易。</li>
+<li>netfilter架构的4表5链：其中表是按照对数据包的操作区分的，链是按照不同的Hook点来区分的，表和链实际上是netfilter的两个维度。</li>
+</ol>
+<h3 id="防火墙和连接跟踪表nat的关系">防火墙和连接跟踪表、NAT的关系</h3>
+<ul>
+<li>linux对每个数据包记录连接状态。这些状态都存到连接记录跟踪表。</li>
+<li>linux的iptables/netfilter 是有状态记录的，就是查的连接跟踪表。</li>
+<li>NAT就是靠netfilter中的NAT表中的规则来实现的，基础是连接跟踪。</li>
+<li>用户使用iptables工具，通过配置raw表，可以对数据包不进行连接跟踪，这样也就无法进行NAT了。</li>
+<li>NAT涉及到修改包的源or目的地址，修改后回来的包就根据连接跟踪表进行状态跟踪。</li>
+<li>依赖netfilter模块的服务一个是防火墙，还有一个是docker。关掉防火墙（docker）之后，响应的内核参数也随之消除（失效）。<code>sysctl -a | grep conntrack</code></li>
+</ul>
+<p>docker关闭：系统是最小安装的话应该不会自带。如果发现系统里有 docker 的网卡在，又确定没有地方用到 docker 的话就关掉：</p>
+<pre><code>sudo systemctl stop docker
+sudo systemctl disable docker
+</code></pre><h2 id="注意">注意：</h2>
+<ol>
+<li>在防火墙关闭状态下，不要通过iptables指令（比如 iptables -nL）来查看当前状态！因为这样会导致防火墙被启动，而且规则为空。虽然不会有任何拦截效果，但所有连接状态都会被记录，浪费资源且影响性能并可能导致防火墙主动丢包！&mdash;&ndash;有待考证？？？？</li>
+<li><a href="https://my.oschina.net/u/3803405/blog/1795294">应用实战</a></li>
+</ol>
+<p><a href="https://www.cnblogs.com/liushaodong/archive/2013/02/26/2933593.html">原理代码级</a><br>
+<a href="https://testerhome.com/topics/15824">nf_conntrack_table full详细解答</a></p>
+
+                
+                
+
+                <br>
+                <br>
+
+            </div>
+
+        </div>
+    </div>
+    <div class="column is-3">
+        <div class="card">
+    <div class="card-content">
+        <h2 class="title is-6">Recent posts</h2>
+        
+        <h2><a class="is-size-6" href="/post/basetar-%E5%91%BD%E4%BB%A4/">【Base】 tar 命令</a></h2>
+        
+        <time class="has-text-grey-light is-size-7">11 May 2020</time>
+         
+        <h2><a class="is-size-6" href="/post/netfilter%E7%AE%80%E5%8D%95%E6%A2%B3%E7%90%86/">Netfilter简单梳理</a></h2>
+        
+        <time class="has-text-grey-light is-size-7">10 May 2020</time>
+         
+        <h2><a class="is-size-6" href="/post/first_post/">First_post</a></h2>
+        
+        <time class="has-text-grey-light is-size-7">6 May 2020</time>
+         
+    </div>
+</div>
+<br>
+        
+
+
+        <div class="card">
+    <div class="card-content">
+        <h2 class="title is-6">Tags</h2>
+        <div>
+            
+        </div>
+    </div>
+</div>
+<br>
+    </div>
+</div>
+
+        </div>
+    </div>
+
+    
+    <footer class="footer has-background-grey-darker has-text-white">
+    <div class="content has-text-centered">
+        <p>
+            <span class="icon is-large">
+                <a href="https://twitter.com/" class="mysocial" rel="me">
+                    <i class="fab fa-twitter fa-3x"></i></a>
+            </span>&nbsp;&nbsp;
+            <span class="icon is-large">
+                <a href="https://www.youtube.com/" class="mysocial" rel="me">
+                    <i class="fab fa-youtube fa-3x"></i></a>
+            </span>&nbsp;&nbsp;
+            <span class="icon is-large">
+                <a href="https://github.com/" class="mysocial" rel="me">
+                    <i class="fab fa-github fa-3x"></i></a>
+            </span>&nbsp;&nbsp;
+            <br><br>
+            Links：
+            
+            <br><br />
+             &copy; My New Hugo Site 2020
+            - <a class="mysocial" href="https://github.com/hollson/hugo-theme-dooz">Hugo Theme</a>
+        </p>
+    </div>
+</footer>
+
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src='/js/dooz.totop.js?v=0.0.0' async=""></script>
+
+
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = 'https://hm.baidu.com/hm.js?';
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id="></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', '');
+</script>
+
+    
+    
+<script type="text/javascript" src="/js/reward.js"></script>
+
+    
+    <script defer src="https://cdn.staticfile.org/font-awesome/5.13.0/js/all.min.js"></script>
+</body>
+
+</html>
